@@ -1,0 +1,4 @@
+hi.
+I am Raya and I am planning to use this repo to start my devops journey.
+today is november 3rd 2023 and marks the first day of my project. 
+I hope this repo would enspire other people who want to join this path.
