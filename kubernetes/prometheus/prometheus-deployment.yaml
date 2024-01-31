@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus
+  name: prometheus-deployment
   namespace: monitoring
   labels:
-    app: prometheus
+    app: prometheus-server
 spec:
   replicas: 1
   strategy:
@@ -14,30 +14,37 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: prometheus
+      app: prometheus-server
   template:
     metadata:
       labels:
-        app: prometheus
+        app: prometheus-server
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"
     spec:
       containers:
-      - name: prometheus
+      - name: prometheus-server
         image: prom/prometheus
         args:
-          - '--storage.tsdb.retention=6h'
-          - '--storage.tsdb.path=/prometheus'
+          - '--storage.tsdb.retention=12h'
+          - '--storage.tsdb.path=/prometheus/'
           - '--config.file=/etc/prometheus/prometheus.yml'
         ports:
         - name: web
           containerPort: 9090
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500M
+          limits:
+            cpu: 1
+            memory: 1Gi
         volumeMounts:
         - name: prometheus-config-volume
-          mountPath: /etc/prometheus
+          mountPath: /etc/prometheus/
         - name: prometheus-storage-volume
-          mountPath: /prometheus
+          mountPath: /prometheus/
       restartPolicy: Always
       volumes:
       - name: prometheus-config-volume
@@ -45,5 +52,4 @@ spec:
             defaultMode: 420
             name: prometheus-config
       - name: prometheus-storage-volume
-        persistentVolumeClaim:
-            claimName: pvc-nfs-data
+        emptyDir: {}

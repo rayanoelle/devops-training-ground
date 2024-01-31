@@ -2,19 +2,66 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
+  labels:
+    name: prometheus-config
   namespace: monitoring
 data:
-  prometheus.yml: |
+  prometheus.rules: |-
+    groups:
+    - name: devops training ground initial alert
+      rules:
+      - alert: High Pod Memory
+        expr: sum(container_memory_usage_bytes)>1
+        for: 1m
+        labels:
+          severity: slack
+        annotations:
+          summary: High Memory Usage
+  prometheus.yml: |-
     global:
       scrape_interval:     15s
       evaluation_interval: 15s
+    rule_files:
+      - /etc/prometheus/prometheus.rules
     alerting:
       alertmanagers:
       - static_configs:
         - targets:
-    rule_files:
-      # - "example-file.yml"
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
         - targets: ['localhost:9090']
+      - job_name: 'kubelet'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      - job_name: 'cAdvisor'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        metrics_path: /metrics/cadvisor
+      - job_name: 'kubernetes-apiserver'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+        - role: pod
+        relabel_configs:
+        - source_labels: [ __ meta_kubernetes_pod_container_port_name]
+          regex: metrics
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          target_label: job
+
