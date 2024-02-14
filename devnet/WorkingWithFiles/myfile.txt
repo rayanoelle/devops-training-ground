@@ -1,0 +1,4 @@
+writing to files with r+ adds line to begining of filesnd linejust a line.
+jsus   a 2nd line
+ just a line.
+jsus   a 2nd line

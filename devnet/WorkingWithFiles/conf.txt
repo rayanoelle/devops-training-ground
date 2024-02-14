@@ -1,0 +1,6 @@
+hi this is sample
+read r(rb binary, rt text-> text)
+write w
+append  a
+text files: lines of utf-8 charachters.
+binary files: any file but text( i can be processed by apps that understand them exp:pdf)
